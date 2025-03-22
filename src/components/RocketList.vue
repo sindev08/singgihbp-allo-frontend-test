@@ -42,37 +42,37 @@
 </template>
 
 <script setup lang="ts">
-import { useRocketStore } from "@/stores";
-import type { IRocket } from "@/types/rockets";
-import { ref, computed, onMounted } from "vue";
-import AddRocketDialog from "./AddRocketDialog.vue";
+import { useRocketStore } from '@/stores'
+import type { IRocket } from '@/types/rockets'
+import { ref, computed, onMounted } from 'vue'
+import AddRocketDialog from './AddRocketDialog.vue'
 // import { useRocketStore } from "@/stores/rocketStore";
 
-const rocketStore = useRocketStore();
-const { rockets, loading, error, fetchRockets, addRocket } = rocketStore;
+const rocketStore = useRocketStore()
+const { rockets, loading, error, fetchRockets, addRocket } = rocketStore
 
-const search = ref("");
-const addRocketDialog = ref<InstanceType<typeof AddRocketDialog> | null>(null);
+const search = ref('')
+const addRocketDialog = ref<InstanceType<typeof AddRocketDialog> | null>(null)
 
 const filteredRockets = computed(() =>
   rockets.filter((rocket) =>
-    rocket.name.toLowerCase().includes(search.value.toLowerCase())
-  )
-);
+    rocket.name.toLowerCase().includes(search.value.toLowerCase()),
+  ),
+)
 
-console.log("filteredRockets test", filteredRockets);
+console.log('filteredRockets test', filteredRockets)
 
 const openDialog = () => {
   if (addRocketDialog.value) {
-    addRocketDialog.value.dialog = true;
+    addRocketDialog.value.dialog = true
   }
-};
+}
 
 const addNewRocket = (newRocket: IRocket) => {
-  addRocket(newRocket);
-};
+  addRocket(newRocket)
+}
 
-onMounted(fetchRockets);
+onMounted(fetchRockets)
 </script>
 
 <!-- <template>

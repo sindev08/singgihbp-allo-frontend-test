@@ -1,5 +1,9 @@
 <template>
-  <v-card class="rocket-card" outlined>
+  <v-card
+    class="rocket-card cursor-pointer"
+    outlined
+    @click="goToDetail(rocket)"
+  >
     <v-img :src="rocket.image" height="200px" cover></v-img>
     <v-card-title>{{ rocket.name }}</v-card-title>
     <v-card-subtitle>{{ rocket.description }}</v-card-subtitle>
@@ -7,16 +11,24 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
+import type { IRocket } from '@/types/rockets'
+import { defineProps } from 'vue'
+import { useRouter } from 'vue-router'
 
 interface Rocket {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
+  id: string
+  name: string
+  description: string
+  image: string
 }
 
-defineProps<{ rocket: Rocket }>();
+defineProps<{ rocket: IRocket }>()
+const router = useRouter()
+const goToDetail = (rocket: IRocket) => {
+  console.log('rocket', rocket)
+
+  router.push(`/rocket/${rocket.id}`)
+}
 </script>
 
 <style scoped>
