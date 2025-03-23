@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { IResRocket, IRocket } from '@/types/rockets'
 import { getRockets } from '@/services/rockets'
 
@@ -7,31 +7,47 @@ export const useRocketStore = defineStore('rocketStore', () => {
   const rockets = ref<IRocket[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const initialized = ref(false) // Track if store has been initialized
 
-  // 🚀 Load dari localStorage saat store pertama kali dibuat
-  const loadFromLocalStorage = () => {
-    const savedRockets = localStorage.getItem('rockets')
-    if (savedRockets) {
-      rockets.value = JSON.parse(savedRockets)
-    }
-  }
-  // 🚀 Fetch data dari API jika tidak ada di localStorage
-  const fetchRockets = async () => {
+  // Computed for status
+  const isEmpty = computed(() => rockets.value.length === 0)
+
+  // Inisialisasi store - called once when the application starts
+  const initialize = async () => {
+    if (initialized.value) return // Prevent multiple initializations
+
     loading.value = true
     error.value = null
 
     try {
-      if (!rockets.value.length) {
-        const savedRockets = localStorage.getItem('rockets')
-        if (savedRockets) {
-          rockets.value = JSON.parse(savedRockets)
-          loading.value = false
-          return
-        }
+      // Try loading from localStorage first
+      const savedRockets = localStorage.getItem('rockets')
+
+      if (savedRockets) {
+        rockets.value = JSON.parse(savedRockets)
+      } else {
+        // If not in localStorage, fetch from API
+        await fetchFromAPI()
+      }
+    } catch (err) {
+      console.error('Store initialization error:', err)
+      error.value = 'Gagal menginisialisasi data.'
+    } finally {
+      loading.value = false
+      initialized.value = true
+    }
+  }
+
+  // Function to fetch from API
+  const fetchFromAPI = async () => {
+    try {
+      // Fetching rockets from API
+      const data = await getRockets()
+
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Invalid API response format')
       }
 
-      // 🔥 Fetch dari API jika localStorage kosong
-      const data = await getRockets()
       rockets.value = data.map((r: IResRocket) => ({
         id: r.id,
         name: r.name,
@@ -43,24 +59,43 @@ export const useRocketStore = defineStore('rocketStore', () => {
         active: r.active,
       }))
 
-      // 🚀 Simpan ke localStorage
+      // Save to localStorage
       localStorage.setItem('rockets', JSON.stringify(rockets.value))
-    } catch (error) {
-      console.error('Error fetching rockets:', error)
-      //   error.value = "Gagal mengambil data roket.";
+    } catch (err) {
+      console.error('API fetch error:', err)
+      error.value = 'Gagal mengambil data dari API.'
+      throw err // Re-throw for top level handling
+    }
+  }
+
+  // Refresh data - called when the user wants to refresh the data.
+  const refreshRockets = async () => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await fetchFromAPI()
+    } catch (err) {
+      // Error already handled in fetchFromAPI
     } finally {
       loading.value = false
     }
   }
 
-  // 🚀 Tambah roket baru dan simpan ke localStorage
+  // Add new rocket
   const addRocket = (newRocket: IRocket) => {
     rockets.value.push(newRocket)
     localStorage.setItem('rockets', JSON.stringify(rockets.value))
   }
 
-  // 🔥 Jalankan loadFromLocalStorage saat pertama kali store dipakai
-  loadFromLocalStorage()
-
-  return { rockets, loading, error, fetchRockets, addRocket }
+  return {
+    rockets,
+    loading,
+    error,
+    isEmpty,
+    initialized,
+    initialize,
+    refreshRockets,
+    addRocket,
+  }
 })

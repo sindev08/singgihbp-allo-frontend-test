@@ -71,7 +71,7 @@ interface IPayloadWeight {
   kg: number
   lb: number
 }
-// interface khusus response API
+// interface response API only
 export interface IResRocket {
   height: IDimensions
   diameter: IDimensions
@@ -97,6 +97,7 @@ export interface IResRocket {
   id: string
 }
 
+// interface for store
 export interface IRocket {
   id: string
   name: string

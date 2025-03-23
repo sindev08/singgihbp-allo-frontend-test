@@ -34,7 +34,7 @@ const rocket = computed(() =>
 
 onMounted(() => {
   if (!rocket.value) {
-    rocketStore.fetchRockets()
+    rocketStore.refreshRockets()
   }
 })
 </script>

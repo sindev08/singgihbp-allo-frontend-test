@@ -15,18 +15,10 @@ import type { IRocket } from '@/types/rockets'
 import { defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 
-interface Rocket {
-  id: string
-  name: string
-  description: string
-  image: string
-}
-
 defineProps<{ rocket: IRocket }>()
 const router = useRouter()
+// routing to detail
 const goToDetail = (rocket: IRocket) => {
-  console.log('rocket', rocket)
-
   router.push(`/rocket/${rocket.id}`)
 }
 </script>

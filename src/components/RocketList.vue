@@ -1,23 +1,41 @@
 <template>
   <v-container>
-    <v-text-field v-model="search" label="Cari Roket..." class="mb-4" />
-
-    <v-btn color="primary" @click="openDialog"> Tambah Roket </v-btn>
-    <v-btn v-if="error" color="error" class="ml-2" @click="fetchRockets">
-      Coba Lagi
-    </v-btn>
-
-    <v-alert v-if="error" type="error" class="mt-3">
-      {{ error }}
+    <!-- Error state -->
+    <v-alert v-if="storeError" type="error" class="mb-4">
+      {{ storeError }}
+      <v-btn color="white" variant="text" @click="refreshData" class="ml-2">
+        Try again
+      </v-btn>
     </v-alert>
 
-    <v-progress-circular
-      v-if="loading"
-      indeterminate
-      color="primary"
-      class="mt-5"
-    />
+    <!-- Search & Add button -->
+    <div class="d-flex align-center mb-4">
+      <v-text-field
+        v-model="search"
+        label="Search Rocket by name..."
+        hide-details
+        density="compact"
+        class="flex-grow-1"
+      />
+      <v-btn color="primary" @click="openDialog" class="ml-2">
+        Add Rocket
+      </v-btn>
+    </div>
 
+    <!-- Loading state -->
+    <div v-if="isLoading" class="d-flex justify-center my-8">
+      <v-progress-circular indeterminate color="primary" size="64" />
+    </div>
+
+    <!-- Empty state -->
+    <v-alert v-else-if="isEmpty && !isLoading" type="info" class="my-4">
+      Rocket is not available
+      <v-btn color="primary" variant="text" @click="refreshData" class="ml-2">
+        Load data
+      </v-btn>
+    </v-alert>
+
+    <!-- Rocket list -->
     <v-row v-else>
       <v-col
         v-for="rocket in filteredRockets"
@@ -29,10 +47,10 @@
         <RocketCard :rocket="rocket" />
       </v-col>
 
-      <!-- ✅ Tampilkan jika pencarian kosong -->
+      <!-- No search results -->
       <v-col v-if="!filteredRockets.length && search" cols="12">
         <v-alert type="info" class="text-center">
-          🚀 Search name tidak tersedia
+          🚀 There is no rocket with the name "{{ search }}"
         </v-alert>
       </v-col>
     </v-row>
@@ -45,23 +63,34 @@
 import { useRocketStore } from '@/stores'
 import type { IRocket } from '@/types/rockets'
 import { ref, computed, onMounted } from 'vue'
-import AddRocketDialog from './AddRocketDialog.vue'
-// import { useRocketStore } from "@/stores/rocketStore";
+import type AddRocketDialog from './AddRocketDialog.vue'
 
+// Store
 const rocketStore = useRocketStore()
-const { rockets, loading, error, fetchRockets, addRocket } = rocketStore
+const {
+  rockets,
+  // loading: storeLoading,
+  error: storeError,
+  isEmpty,
+  initialized,
+  initialize,
+  refreshRockets,
+  addRocket,
+} = rocketStore
 
+// Local state
 const search = ref('')
+const isLoading = ref(true)
 const addRocketDialog = ref<InstanceType<typeof AddRocketDialog> | null>(null)
 
+// Computed
 const filteredRockets = computed(() =>
   rockets.filter((rocket) =>
     rocket.name.toLowerCase().includes(search.value.toLowerCase()),
   ),
 )
 
-console.log('filteredRockets test', filteredRockets)
-
+// Methods
 const openDialog = () => {
   if (addRocketDialog.value) {
     addRocketDialog.value.dialog = true
@@ -72,62 +101,30 @@ const addNewRocket = (newRocket: IRocket) => {
   addRocket(newRocket)
 }
 
-onMounted(fetchRockets)
-</script>
-
-<!-- <template>
-  <v-container>
-    <v-text-field v-model="search" label="Cari Roket..." class="mb-4" />
-
-    <v-row>
-      <v-col
-        v-for="rocket in filteredRockets"
-        :key="rocket.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <RocketCard :rocket="rocket" />
-      </v-col>
-    </v-row>
-  </v-container>
-</template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { getRockets } from "@/services/rockets";
-import type { IResRocket, IRocket } from "@/types/rockets";
-
-const rockets = ref<IRocket[]>([]);
-const search = ref("");
-
-const filteredRockets = computed(() =>
-  rockets.value.filter((rocket) =>
-    rocket.name.toLowerCase().includes(search.value.toLowerCase())
-  )
-);
-
-const fetchRocketData = async () => {
+const refreshData = async () => {
   try {
-    const data = await getRockets();
-    rockets.value = data.map((r: IResRocket) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      image: r.flickr_images[0] || "",
-    }));
-    console.log("data", data);
-  } catch (error) {
-    console.error("Failed to fetch rockets:", error);
+    isLoading.value = true
+    await refreshRockets()
+  } finally {
+    isLoading.value = false
   }
-};
-
-onMounted(fetchRocketData);
-</script>
-
-<style scoped>
-.v-container {
-  max-width: 1200px;
-  margin: auto;
 }
-</style> -->
+
+// Lifecycle
+onMounted(async () => {
+  // RocketList mounted, initialized
+  try {
+    isLoading.value = true
+
+    // Initialize store if not already initialized
+    if (!initialized) {
+      // Initializing store
+      await initialize()
+    }
+  } catch (err) {
+    console.error('Error in component mount:', err)
+  } finally {
+    isLoading.value = false
+  }
+})
+</script>
