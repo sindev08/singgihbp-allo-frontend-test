@@ -8,7 +8,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AddRocketDialog: typeof import('./src/components/AddRocketDialog.vue')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     RocketCard: typeof import('./src/components/RocketCard.vue')['default']
     RocketDetail: typeof import('./src/components/RocketDetail.vue')['default']
     RocketList: typeof import('./src/components/RocketList.vue')['default']

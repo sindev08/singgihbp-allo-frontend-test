@@ -2,7 +2,7 @@
   <v-container v-if="rocket">
     <v-img :src="rocket.image" height="300px" />
     <h2 class="mt-4">{{ rocket.name }}</h2>
-    <p>{{ rocket.description }}</p>
+    <p class="mb-4">{{ rocket.description }}</p>
     <v-list>
       <v-list-item>🚀 Country: {{ rocket.country }}</v-list-item>
       <v-list-item
@@ -11,6 +11,7 @@
         }}</v-list-item
       >
       <v-list-item>📅 First Flight: {{ rocket.first_flight }}</v-list-item>
+      <v-list-item>🚀 Active: {{ rocket.active ? 'Yes' : 'No' }}</v-list-item>
     </v-list>
     <v-btn color="primary" class="mt-3" @click="$router.push('/')"
       >🔙 Back</v-btn
